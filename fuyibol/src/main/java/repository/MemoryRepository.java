@@ -1,8 +1,9 @@
 package repository;
 
 
-import model.Training;
 import org.springframework.stereotype.Repository;
+
+import entity.Training;
 
 import java.util.ArrayList;
 import java.util.List;

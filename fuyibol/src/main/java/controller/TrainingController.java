@@ -4,10 +4,11 @@ package controller;
 
 import dto.MessageResponseDTO;
 import dto.PlayerDTO;
-import dto.StarterPlayerDTO;
+import dto.*;
 import dto.TrainingRequestDTO;
 import entity.*;
-import service.TrainingService;
+import services.TrainingService;
+import dto.StarterResponse;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -61,7 +62,7 @@ public class TrainingController {
 
         try {
 
-            List<StarterPlayerDTO> titulares =
+            List<StarterResponse> titulares =
                     trainingService.obtenerTitulares();
 
             return ResponseEntity.ok(titulares);

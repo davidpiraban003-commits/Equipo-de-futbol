@@ -1,12 +1,12 @@
 package services;
 
+import dto.StarterPlayerDTO;
+import entity.*;
 
-
-import dto.*;
 import repository.MemoryRepository;
 import org.springframework.stereotype.Service;
-import entity.Training;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -21,7 +21,6 @@ public class TrainingService {
     }
 
     public void guardarEntrenamiento(Training training) {
-
         repository.save(training);
     }
 
@@ -29,61 +28,52 @@ public class TrainingService {
 
         List<Training> trainings = repository.findAll();
 
-        if (trainings.size() < 3) {
+        if (trainings.size() != 3) {
             throw new RuntimeException(
-                    "No hay suficiente información para determinar el equipo titular");
+                    "Deben existir exactamente 3 entrenamientos para calcular el equipo titular");
         }
 
-        Map<String, Double> puntajesAcumulados =
-                new HashMap<>();
-
-        Map<String, Integer> participaciones =
-                new HashMap<>();
+        Map<String, Double> puntajesAcumulados = new HashMap<>();
+        Map<String, Integer> participaciones = new HashMap<>();
 
         for (Training training : trainings) {
 
             for (Player player : training.getJugadores()) {
 
-                double resultado =
-                        player.calcularResultado();
+                double resultado = player.calcularResultado();
 
-                puntajesAcumulados.merge(
+                puntajesAcumulados.put(
                         player.getNombre(),
-                        resultado,
-                        Double::sum
+                        puntajesAcumulados.getOrDefault(
+                                player.getNombre(), 0.0
+                        ) + resultado
                 );
 
-                participaciones.merge(
+                participaciones.put(
                         player.getNombre(),
-                        1,
-                        Integer::sum
+                        participaciones.getOrDefault(
+                                player.getNombre(), 0
+                        ) + 1
                 );
             }
         }
 
-        return puntajesAcumulados.entrySet()
-                .stream()
-                .map(entry -> {
+        List<StarterPlayerDTO> titulares = new ArrayList<>();
 
-                    String nombreJugador =
-                            entry.getKey();
+        for (String nombreJugador : puntajesAcumulados.keySet()) {
 
-                    double promedio =
-                            entry.getValue()
-                                    / participaciones.get(nombreJugador);
+            double promedio =
+                    puntajesAcumulados.get(nombreJugador)
+                            / participaciones.get(nombreJugador);
 
-                    return new StarterPlayerDTO(
+            titulares.add(
+                    new StarterPlayerDTO(
                             nombreJugador,
-                            Math.round(promedio * 100.0) / 100.0
-                    );
-                })
-                .sorted((j1, j2) ->
-                        Double.compare(
-                                j2.getPromedio(),
-                                j1.getPromedio()
-                        )
-                )
-                .limit(5)
-                .toList();
+                            promedio
+                    )
+            );
+        }
+
+        return titulares;
     }
 }
